@@ -1,11 +1,16 @@
-function opt_delta = oxlay (V, t1, w, alpha, Tw, Cp, K)
+function opt_delta = oxlay (V, t1, w, Cp, K)
 %% flow chart implementation
-ro = 7580;
-ita = 0.5;                   % to be changed
-                             % probably into 0:1 to find avarage NewTab
-psi = 0.5;                   % same as ita
+
+A = 553.1; B = 600.8;
+alpha = -5;
+C = 0.0134;
+m = 1;
 n = 1.45;
-exp = 1;                     % arbitary expression
+Tw = 313;
+ro = 7580;
+
+ita = 0:0.1:1;
+psi = 0:0.1:1;
 sigma_diff = 1e5;            % assumed init. diff. between sigmaN & N_
 opt_C0 = 2;                  % assumed optimum C0
 
@@ -27,7 +32,8 @@ for delta = 0.005:0.005:0.2
             while true
                 Cp = 420 + 0.504*Tab;
                 K = 52.61 - 0.0281*Tab;
-                k_ab = exp;                 %to be replaced
+                k_ab = sqrt(1/3)*(A+B*Eab^n)...
+                    *(1+C*log(E_ab/E_0)*(1-((Tab-Tw)/(tm-tw))^m));
                 Fs = k_ab*l*w;
                 Rt = ro*Cp*V*t1/K;
                 
@@ -38,7 +44,7 @@ for delta = 0.005:0.005:0.2
                 end
                 m_chip = ro*V*t1*w;
                 Tsz = (1 - beta)*Fs*Vs/m_chip/Cp;
-                NewTab = Tw + ita * Tsz;
+                NewTab = Tw + mean(ita * Tsz);
 
                 if abs(Tab - NewTab) > 0.1
                     Tab = NewTab;
@@ -46,7 +52,7 @@ for delta = 0.005:0.005:0.2
                     break;
                 end
             end
-            n_eq = 1;               %to be replaced
+            n_eq = n*B*Eab^n/(A+B*Eab^n); 
             theta = atan(1 + 2*(pi/4 -phi) +C0*n);
             lambda = theta + alpha - phi;
             R = Fs/cosd(theta);
@@ -76,25 +82,30 @@ for delta = 0.005:0.005:0.2
                 end
             end
             Rt = ro*Cp*V*t1/K;
-            del_Tm = Rt*exp;                    %to be replaced
-            Tint = Tw + Tsz + psi*del_Tm;
-            k_chip(itr) = Tint*exp;             %to be replaced
+            del_Tm = delta_Tc*...
+                10^(0.06-0.195*delta*sqrt(Rt*t2/h)+0.5*log10(Rt*t2/h));
+            Tint = Tw + Tsz + mean(psi*del_Tm);
+            k_chip(itr) = sqrt(1/3)*(A+B*Eint^n)...
+                *(1+C*log(E_int/E_0)*(1-((Tint-Tw)/(tm-tw))^m));
         end
+        Fc_min = [Fc_min min(Fc)];
         % coomputing optimum phi
         diff = abs(to_int - k_chip);
-        phi_index = logical(diff==min(diff((5:0.1:40)*10-50)));%not sure
+        phi_index = logical(diff==min(diff((5:0.1:40)*10-50)));             %not sure
         fi = 5:0.1:45;
         opt_phi = fi(phi_index);
         disp(opt_phi);
         
-        sigmaN_ = exp;                   %to be replaced
-        sigmaN = exp;                    %to be replaced
+        sigmaN_ = k_ab*(1+pi/2-2*alpha-2*C0*n_eq);
+        sigmaN = N/h/w; 
+        
         %computing optimum C0
         if abs(sigmaN - sigmaN_) < sigma_diff
             opt_C0 = C0;
             sigma_diff = abs(sigmaN - sigmaN_);
         end
     end
+    Fc_min_m = [Fc_min_m min(Fc_min)];
     disp(opt_C0);
     
     new_Fc = [newFc exp];                   %no idea
