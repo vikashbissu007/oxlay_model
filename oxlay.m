@@ -9,10 +9,10 @@ A = 553.1; B = 600.8;
 alpha = -5;
 C = 0.0134;
 m = 1;
-n = 1.45;
+n = 0.234;
 Tw = 313;
 ro = 7580;
-Tm = 2600;
+Tm = 1701;
 
 ita = 0:0.1:1;
 psi = 0:0.1:1;
@@ -98,7 +98,7 @@ for delta = 0.005:0.005:0.2
                 *(1+C*log(E_int/E_0)*(1-((Tint-Tw)/(Tm-Tw))^m));
             
             % computing optimum phi
-            if abs(to_int - k_chip) < diff
+            if ~(phi<40) && abs(to_int - k_chip) < diff
                 opt_phi = phi;
                 diff = abs(to_int - k_chip);
             end
