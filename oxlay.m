@@ -1,9 +1,9 @@
-function [Fc, V] = oxlay (D, N, t_input, DoC)
+function [Fc, Delta] = oxlay (V, t1, DoC)
 %% flow chart implementation
 
-V = pi*D*N/60000;
-t1 = t_input/1000;
-w = 1.402*DoC/1000;
+
+
+w = 1.402*DoC;
 
 A = 553.1; B = 600.8;
 alpha = -5;
@@ -98,7 +98,7 @@ for delta = 0.005:0.005:0.2
                 *(1+C*log(E_int/E_0)*(1-((Tint-Tw)/(Tm-Tw))^m));
             
             % computing optimum phi
-            if ~(phi<40) && abs(to_int - k_chip) < diff
+            if phi<=40 && abs(to_int - k_chip) < diff
                 opt_phi = phi;
                 diff = abs(to_int - k_chip);
             end
@@ -120,3 +120,5 @@ for delta = 0.005:0.005:0.2
     
 end
 disp(min(Fc_min_m));
+delta = 0.005:0.005:0.2;
+Delta = delta(find(Fc_min_m == min(Fc_min_m)));
